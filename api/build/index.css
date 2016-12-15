@@ -1,0 +1,29 @@
+body {
+    margin-left: 75px;
+    margin-right: 200px;
+    margin-top: 75px;
+    font-weight: lighter;
+}
+
+h1 {
+    border-bottom: 1px grey solid;
+}
+
+h2 {
+    font-weight: normal;
+    font-size: 18px;
+}
+
+.example {
+    margin-top: 25px;
+}
+
+.code {
+    font-family: monospace;
+    font-size: 16px;
+}
+
+.footer {
+    margin-top: 25px;
+    border-top: 1px grey solid;
+}

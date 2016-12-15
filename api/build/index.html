@@ -1,0 +1,43 @@
+<html>
+<head>
+    <title>u1m API</title>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+    <link rel="stylesheet" type="text/css" href="index.css">
+</head>
+<body>
+    <h1>u1m.jn.gl</h1>
+
+    <p>This is an API into the awesome <a href="https://blog.opendns.com/2016/12/14/cisco-umbrella-1-million/">Umbrella Top 1 Million Domains</a> dataset published by Cisco Umbrella.</p>
+
+    <div class="example">
+        <p>Looking up the rank of a domain</p>
+        <div class="code">
+            <pre>
+$ curl <a href="http://u1m.jn.gl/domain/umbrella.com">http://u1m.jn.gl/domain/umbrella.com</a> | jq
+{
+  "domain": "umbrella.com",
+  "rank": 83069
+}
+            </pre>
+        </div>
+    </div>
+
+    <div class="example">
+        <p>Looking up the domain at a given rank</p>
+        <div class="code">
+            <pre>
+$ curl -s <a href="http://u1m.jn.gl/rank/21675">http://u1m.jn.gl/rank/21675</a> | jq
+{
+  "domain": "news.ycombinator.com",
+  "rank": 21675
+}
+            </pre>
+        </div>
+    </div>
+
+    <p> The source code for this service is available on <a href="https://github.com/transitorykris/u1m">Github</a></p>
+
+    <div class="footer">
+        <div>This API is free to use. Questions, comments: <a href="https://twitter.com/transitorykris">@transitorykris</a> on Twitter</div>
+    </div>
+</body>
