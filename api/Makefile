@@ -1,8 +1,8 @@
 all:
-	docker build -t u1m/api .
+	docker build -t transitorykris/u1m-api .
 
 push:
-	docker push -t u1m/api
+	docker push transitorykris/u1m-api
 
 clean:
-	docker rmi u1m/api
+	docker rmi transitorykris/u1m-api

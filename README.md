@@ -31,7 +31,7 @@ Load the data (warning: this is a 30MB compressed zipfile, with 1M rows of data)
 $ make
 $ docker run -it \
     -e APP_DB="root:secret@tcp(db.yourdomain.com:3306)/u1m" \
-    u1m/loader
+    transitorykris/u1m-loader
 ```
 
 Run an instance of the API
@@ -42,7 +42,7 @@ $ docker run \
     -e APP_DB="root:secret@tcp(db.yourdomain.com:3306)/u1m"
     -e APP_BIND=":8080"
     -p 8080:8080 \
-    u1m/u1mapi
+    transitorykris/u1m-api
 ```
 
 Test it out

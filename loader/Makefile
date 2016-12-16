@@ -1,5 +1,5 @@
 all:
-	docker build -t u1m/loader .
+	docker build -t transitorykris/u1m-loader .
 
 load:
-	docker run -it u1m/loader
+	docker run -it transitorykris/u1m-loader
