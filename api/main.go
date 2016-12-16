@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/gorilla/mux"
 	"github.com/kelseyhightower/envconfig"
 )
 
@@ -45,13 +44,8 @@ func main() {
 	}
 	defer s.Close()
 
-	r := mux.NewRouter()
-	r.Handle("/domain/{domain:[a-zA-Z0-9.-]+}", s.GetDomainHandler()).Methods("GET")
-	r.Handle("/rank/{rank:[0-9]+}", s.GetRankHandler()).Methods("GET")
-	r.PathPrefix("/").Handler(http.FileServer(http.Dir("build")))
-
 	logger.Info("Starting API server")
-	err = http.ListenAndServe(spec.Bind, r)
+	err = http.ListenAndServe(spec.Bind, s.Router())
 	if err != nil {
 		logger.Errorln(err)
 	}
