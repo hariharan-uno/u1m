@@ -1,6 +1,6 @@
 development:
     driver: mysql
-    open: root:password@tcp(db-dev.yourdomain.com:3306)/u1m
+    open: root:password@tcp(localhost:3306)/u1m
 
 production:
     driver: mysql
