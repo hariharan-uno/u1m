@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
@@ -19,61 +19,47 @@ import (
 
 // this service's configuration
 type specification struct {
-	DB string `envconfig:"db"`
+	DB       string        `envconfig:"db"`
+	Interval time.Duration `envconfig:"interval" default:"24h"`
+	ZipURL   string        `envconfig:"zip_url" default:"http://s3-us-west-1.amazonaws.com/umbrella-static/top-1m.csv.zip"`
 }
 
-func main() {
-	var err error
-
-	var spec specification
-	err = envconfig.Process("APP", &spec)
-	if err != nil {
-		logrus.Fatalln(err)
-	}
-
-	logrus.SetLevel(logrus.DebugLevel)
-	logrus.Infoln("Starting loader")
-
+func load(db *sqlx.DB, zipURL string) error {
 	logrus.Debugln("Downloading top-1m.csv.zip")
-	resp, err := http.Get("http://s3-us-west-1.amazonaws.com/umbrella-static/top-1m.csv.zip")
+	resp, err := http.Get(zipURL)
 	if err != nil {
-		logrus.Errorln(err)
+		return err
 	}
 	defer resp.Body.Close()
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		logrus.Fatalln(err)
+		return err
 	}
 	zipFile := bytes.NewReader(respBytes)
 	contents, err := zip.NewReader(zipFile, resp.ContentLength)
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	logrus.Debugln("Unzipping")
 	var rc io.ReadCloser
 	for _, f := range contents.File {
 		if f.Name != "top-1m.csv" {
-			logrus.Infoln("Skipping unknown file", f.Name)
 			continue
 		}
 		rc, err = f.Open()
 		if err != nil {
-			logrus.Fatalln(err)
+			return err
 		}
 		defer rc.Close()
 		break
 	}
-
-	logrus.Debugln("Connecting to database")
-	db, err := sqlx.Connect("mysql", spec.DB)
-	if err != nil {
-		logrus.Fatalln(err)
+	if rc == nil {
+		return fmt.Errorf("Did not find top-1m.csv in zip file")
 	}
-	defer db.Close()
 
 	if _, err = db.Exec("CREATE TEMPORARY TABLE temp_current LIKE current"); err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	logrus.Debugln("Reading in values")
 	var valueString []string
@@ -101,12 +87,39 @@ func main() {
 		valueArgs = nil
 	}
 	if _, err = db.Exec("INSERT current SELECT rank, domain FROM temp_current ON DUPLICATE KEY UPDATE current.domain=temp_current.domain"); err != nil {
-		log.Fatalln(err)
+		return err
 	}
-
 	if _, err = db.Exec("DROP TABLE temp_current"); err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	logrus.Infoln("Finished loading")
+	return nil
+}
+
+func main() {
+	var err error
+
+	var s specification
+	err = envconfig.Process("APP", &s)
+	if err != nil {
+		logrus.Fatalln(err)
+	}
+
+	logrus.Debugln("Connecting to database")
+	db, err := sqlx.Connect("mysql", s.DB)
+	if err != nil {
+		logrus.Fatalln(err)
+	}
+	defer db.Close()
+
+	logrus.SetLevel(logrus.DebugLevel)
+	logrus.Infoln("Starting loader")
+
+	for {
+		if err = load(db, s.ZipURL); err != nil {
+			logrus.Errorln(err)
+		}
+		time.Sleep(s.Interval)
+	}
 }

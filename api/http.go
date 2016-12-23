@@ -17,6 +17,7 @@ func httpResponse(w http.ResponseWriter, v interface{}, status int) error {
 	if err != nil {
 		return err
 	}
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	fmt.Fprint(w, string(body))
 	return nil
