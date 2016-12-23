@@ -20,7 +20,7 @@ import (
 // this service's configuration
 type specification struct {
 	DB       string        `envconfig:"db"`
-	Interval time.Duration `envconfig:"interval" default:"1h"`
+	Interval time.Duration `envconfig:"interval" default:"24h"`
 	ZipURL   string        `envconfig:"zip_url" default:"http://s3-us-west-1.amazonaws.com/umbrella-static/top-1m.csv.zip"`
 }
 
