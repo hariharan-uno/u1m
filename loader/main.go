@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
@@ -22,18 +23,7 @@ type specification struct {
 	DB string `envconfig:"db"`
 }
 
-func main() {
-	var err error
-
-	var spec specification
-	err = envconfig.Process("APP", &spec)
-	if err != nil {
-		logrus.Fatalln(err)
-	}
-
-	logrus.SetLevel(logrus.DebugLevel)
-	logrus.Infoln("Starting loader")
-
+func (s *specification) load() error {
 	logrus.Debugln("Downloading top-1m.csv.zip")
 	resp, err := http.Get("http://s3-us-west-1.amazonaws.com/umbrella-static/top-1m.csv.zip")
 	if err != nil {
@@ -66,7 +56,7 @@ func main() {
 	}
 
 	logrus.Debugln("Connecting to database")
-	db, err := sqlx.Connect("mysql", spec.DB)
+	db, err := sqlx.Connect("mysql", s.DB)
 	if err != nil {
 		logrus.Fatalln(err)
 	}
@@ -101,12 +91,33 @@ func main() {
 		valueArgs = nil
 	}
 	if _, err = db.Exec("INSERT current SELECT rank, domain FROM temp_current ON DUPLICATE KEY UPDATE current.domain=temp_current.domain"); err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	if _, err = db.Exec("DROP TABLE temp_current"); err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	logrus.Infoln("Finished loading")
+	return nil
+}
+
+func main() {
+	var err error
+
+	var s specification
+	err = envconfig.Process("APP", &s)
+	if err != nil {
+		logrus.Fatalln(err)
+	}
+
+	logrus.SetLevel(logrus.DebugLevel)
+	logrus.Infoln("Starting loader")
+
+	for {
+		if err = s.load(); err != nil {
+			logrus.Errorln(err)
+		}
+		time.Sleep(1 * time.Hour)
+	}
 }
