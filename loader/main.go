@@ -24,7 +24,7 @@ type specification struct {
 	Interval time.Duration `envconfig:"interval" default:"1h"`
 }
 
-func (s *specification) load() error {
+func (s *specification) load(db *sqlx.DB) error {
 	logrus.Debugln("Downloading top-1m.csv.zip")
 	resp, err := http.Get("http://s3-us-west-1.amazonaws.com/umbrella-static/top-1m.csv.zip")
 	if err != nil {
@@ -55,13 +55,6 @@ func (s *specification) load() error {
 		defer rc.Close()
 		break
 	}
-
-	logrus.Debugln("Connecting to database")
-	db, err := sqlx.Connect("mysql", s.DB)
-	if err != nil {
-		logrus.Fatalln(err)
-	}
-	defer db.Close()
 
 	if _, err = db.Exec("CREATE TEMPORARY TABLE temp_current LIKE current"); err != nil {
 		log.Fatalln(err)
@@ -112,11 +105,18 @@ func main() {
 		logrus.Fatalln(err)
 	}
 
+	logrus.Debugln("Connecting to database")
+	db, err := sqlx.Connect("mysql", s.DB)
+	if err != nil {
+		logrus.Fatalln(err)
+	}
+	defer db.Close()
+
 	logrus.SetLevel(logrus.DebugLevel)
 	logrus.Infoln("Starting loader")
 
 	for {
-		if err = s.load(); err != nil {
+		if err = s.load(db); err != nil {
 			logrus.Errorln(err)
 		}
 		time.Sleep(s.Interval)
