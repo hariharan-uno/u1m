@@ -21,11 +21,12 @@ import (
 type specification struct {
 	DB       string        `envconfig:"db"`
 	Interval time.Duration `envconfig:"interval" default:"1h"`
+	ZipURL   string        `envconfig:"zip_url" default:"http://s3-us-west-1.amazonaws.com/umbrella-static/top-1m.csv.zip"`
 }
 
-func load(db *sqlx.DB) error {
+func load(db *sqlx.DB, zipURL string) error {
 	logrus.Debugln("Downloading top-1m.csv.zip")
-	resp, err := http.Get("http://s3-us-west-1.amazonaws.com/umbrella-static/top-1m.csv.zip")
+	resp, err := http.Get(zipURL)
 	if err != nil {
 		return err
 	}
@@ -116,7 +117,7 @@ func main() {
 	logrus.Infoln("Starting loader")
 
 	for {
-		if err = load(db); err != nil {
+		if err = load(db, s.ZipURL); err != nil {
 			logrus.Errorln(err)
 		}
 		time.Sleep(s.Interval)
