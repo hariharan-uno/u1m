@@ -24,7 +24,7 @@ type specification struct {
 	Interval time.Duration `envconfig:"interval" default:"1h"`
 }
 
-func (s *specification) load(db *sqlx.DB) error {
+func load(db *sqlx.DB) error {
 	logrus.Debugln("Downloading top-1m.csv.zip")
 	resp, err := http.Get("http://s3-us-west-1.amazonaws.com/umbrella-static/top-1m.csv.zip")
 	if err != nil {
@@ -116,7 +116,7 @@ func main() {
 	logrus.Infoln("Starting loader")
 
 	for {
-		if err = s.load(db); err != nil {
+		if err = load(db); err != nil {
 			logrus.Errorln(err)
 		}
 		time.Sleep(s.Interval)
