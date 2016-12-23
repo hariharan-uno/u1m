@@ -20,7 +20,8 @@ import (
 
 // this service's configuration
 type specification struct {
-	DB string `envconfig:"db"`
+	DB       string        `envconfig:"db"`
+	Interval time.Duration `envconfig:"interval" default:"1h"`
 }
 
 func (s *specification) load() error {
@@ -118,6 +119,6 @@ func main() {
 		if err = s.load(); err != nil {
 			logrus.Errorln(err)
 		}
-		time.Sleep(1 * time.Hour)
+		time.Sleep(s.Interval)
 	}
 }
