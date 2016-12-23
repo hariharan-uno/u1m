@@ -53,6 +53,9 @@ func load(db *sqlx.DB) error {
 		defer rc.Close()
 		break
 	}
+	if rc == nil {
+		return fmt.Errorf("Did not find top-1m.csv in zip file")
+	}
 
 	if _, err = db.Exec("CREATE TEMPORARY TABLE temp_current LIKE current"); err != nil {
 		return err
