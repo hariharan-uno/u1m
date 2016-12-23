@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -28,36 +27,35 @@ func load(db *sqlx.DB) error {
 	logrus.Debugln("Downloading top-1m.csv.zip")
 	resp, err := http.Get("http://s3-us-west-1.amazonaws.com/umbrella-static/top-1m.csv.zip")
 	if err != nil {
-		logrus.Errorln(err)
+		return err
 	}
 	defer resp.Body.Close()
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		logrus.Fatalln(err)
+		return err
 	}
 	zipFile := bytes.NewReader(respBytes)
 	contents, err := zip.NewReader(zipFile, resp.ContentLength)
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	logrus.Debugln("Unzipping")
 	var rc io.ReadCloser
 	for _, f := range contents.File {
 		if f.Name != "top-1m.csv" {
-			logrus.Infoln("Skipping unknown file", f.Name)
 			continue
 		}
 		rc, err = f.Open()
 		if err != nil {
-			logrus.Fatalln(err)
+			return err
 		}
 		defer rc.Close()
 		break
 	}
 
 	if _, err = db.Exec("CREATE TEMPORARY TABLE temp_current LIKE current"); err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	logrus.Debugln("Reading in values")
 	var valueString []string
@@ -87,7 +85,6 @@ func load(db *sqlx.DB) error {
 	if _, err = db.Exec("INSERT current SELECT rank, domain FROM temp_current ON DUPLICATE KEY UPDATE current.domain=temp_current.domain"); err != nil {
 		return err
 	}
-
 	if _, err = db.Exec("DROP TABLE temp_current"); err != nil {
 		return err
 	}
