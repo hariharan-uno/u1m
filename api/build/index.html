@@ -23,6 +23,31 @@ $ curl <a href="http://u1m.jn.gl/domain/umbrella.com">http://u1m.jn.gl/domain/um
     </div>
 
     <div class="example">
+        <p>Looking up the historic ranks of a domain</p>
+        <div class="code">
+            <pre>
+$ curl <a href="http://u1m.jn.gl/history/nytimes.com">http://u1m.jn.gl/history/nytimes.com</a> | jq
+{
+  "domain": "nytimes.com",
+  "history": [
+    {
+      "rank": 2209,
+      "day": "2016-12-14"
+    },
+    {
+      "rank": 2501,
+      "day": "2016-12-15"
+    },
+    {
+      "rank": 2562,
+      "day": "2016-12-21"
+    },
+...snip
+            </pre>
+        </div>
+    </div>
+
+    <div class="example">
         <p>Looking up the domain at a given rank</p>
         <div class="code">
             <pre>

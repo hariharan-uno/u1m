@@ -9,8 +9,9 @@ import (
 
 // Domain represents a domain in the database
 type Domain struct {
-	Domain string `json:"domain"`
+	Domain string `json:"domain,omitempty"`
 	Rank   int    `json:"rank"`
+	Day    string `json:"day,omitempty"`
 }
 
 // GetDomain returns details of a domain
@@ -38,6 +39,40 @@ func (s *Server) GetDomainHandler() http.HandlerFunc {
 			return
 		}
 		httpResponse(w, &domainRes, http.StatusOK)
+	})
+}
+
+// History represents the known ranks of a domain
+type History struct {
+	Domain  string   `json:"domain"`
+	History []Domain `json:"history"`
+}
+
+// GetHistory returns history of a domain's ranks
+func (s *Server) GetHistory(domain string) (History, error) {
+	var h History
+	h.Domain = domain
+	err := s.db.Select(&h.History, "SELECT rank, day FROM ranking WHERE name=? ORDER BY day", domain)
+	return h, err
+}
+
+// GetHistoryHandler returns the current details for a given domain
+func (s *Server) GetHistoryHandler() http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var err error
+		s.log.WithField("func", "GetHistoryHandler")
+		s.log.Infoln(r.Method, r.URL.Path, r.RemoteAddr)
+
+		vars := mux.Vars(r)
+		domain := vars["domain"]
+
+		historyRes, err := s.GetHistory(domain)
+		if err != nil {
+			s.log.Errorln(err)
+			httpResponse(w, &errorResponse{Error: "Domain not found"}, http.StatusNotFound)
+			return
+		}
+		httpResponse(w, &historyRes, http.StatusOK)
 	})
 }
 
