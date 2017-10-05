@@ -6,12 +6,9 @@ https://twitter.com/opendns/status/809143307821518848
 
 http://s3-us-west-1.amazonaws.com/umbrella-static/index.html
 
-## Usage
-
-This API is available as a service at [http://u1m.jn.gl](http://u1m.jn.gl)!
-
+## Usage example
 ```
-$ curl -s http://u1m.jn.gl/rank/21675 | jq
+$ curl -s http://hostname/rank/21675 | jq
 {
   "domain": "news.ycombinator.com",
   "rank": 21675
